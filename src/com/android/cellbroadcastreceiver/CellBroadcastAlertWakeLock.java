@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,35 +18,35 @@ package com.android.cellbroadcastreceiver;
 
 import android.content.Context;
 import android.os.PowerManager;
+import android.util.Log;
 
 /**
- * Hold a wakelock while showing the alert dialog and playing sound.
+ * Hold a wakelock that can be acquired in the CellBroadcastAlertService and
+ * released in the CellBroadcastAlertFullScreen Activity.
  */
 class CellBroadcastAlertWakeLock {
+    private static final String TAG = "CellBroadcastAlertWakeLock";
 
     private static PowerManager.WakeLock sCpuWakeLock;
 
     private CellBroadcastAlertWakeLock() {}
 
-    static void acquireCpuWakeLock(Context context) {
+    static void acquireScreenCpuWakeLock(Context context) {
         if (sCpuWakeLock != null) {
             return;
         }
-
-        PowerManager pm =
-                (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-
-        sCpuWakeLock = pm.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK |
-                PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                PowerManager.ON_AFTER_RELEASE, "CellBroadcastAlertWakeLock");
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        sCpuWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK
+                | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, TAG);
         sCpuWakeLock.acquire();
+        Log.d(TAG, "acquired screen + CPU wake lock");
     }
 
     static void releaseCpuLock() {
         if (sCpuWakeLock != null) {
             sCpuWakeLock.release();
             sCpuWakeLock = null;
+            Log.d(TAG, "released screen + CPU wake lock");
         }
     }
 }

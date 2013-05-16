@@ -19,6 +19,7 @@ package com.android.cellbroadcastreceiver;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.telephony.CellBroadcastMessage;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
@@ -27,26 +28,16 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.util.List;
-
 /**
- * This class manages the view for given conversation.
+ * This class manages the list item view for a single alert.
  */
 public class CellBroadcastListItem extends RelativeLayout {
-    private static final String TAG = "CellBroadcastListItem";
-    private static final boolean DEBUG = false;
 
     private CellBroadcastMessage mCbMessage;
 
     private TextView mChannelView;
     private TextView mMessageView;
     private TextView mDateView;
-
-    private static final StyleSpan STYLE_BOLD = new StyleSpan(Typeface.BOLD);
-
-    public CellBroadcastListItem(Context context) {
-        super(context);
-    }
 
     public CellBroadcastListItem(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -76,9 +67,9 @@ public class CellBroadcastListItem extends RelativeLayout {
                 getResources().getDrawable(R.drawable.list_item_background_read) :
                 getResources().getDrawable(R.drawable.list_item_background_unread);
 
-        setBackgroundDrawable(background);
+        setBackground(background);
 
-        mChannelView.setText(message.getDialogTitleResource());
+        mChannelView.setText(CellBroadcastResources.getDialogTitleResource(message));
         mDateView.setText(message.getDateString(getContext()));
         mMessageView.setText(formatMessage(message));
     }
@@ -90,8 +81,8 @@ public class CellBroadcastListItem extends RelativeLayout {
 
         // Unread messages are shown in bold
         if (!message.isRead()) {
-            buf.setSpan(STYLE_BOLD, 0, buf.length(),
-                    Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+            buf.setSpan(new StyleSpan(Typeface.BOLD), 0, buf.length(),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         return buf;
     }

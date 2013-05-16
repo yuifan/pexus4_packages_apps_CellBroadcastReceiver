@@ -17,50 +17,52 @@
 package com.android.cellbroadcastreceiver;
 
 import android.app.Application;
-import android.content.SharedPreferences;
+import android.telephony.CellBroadcastMessage;
 import android.util.Log;
 import android.preference.PreferenceManager;
 
-import static com.android.cellbroadcastreceiver.CellBroadcastReceiver.DBG;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The application class loads the default preferences at first start,
  * and remembers the time of the most recently received broadcast.
  */
 public class CellBroadcastReceiverApp extends Application {
-    public static final String LOG_TAG = "CellBroadcastReceiverApp";
-    public static final String PREF_KEY_NOTIFICATION_ID = "notification_id";
-
-    static CellBroadcastReceiverApp gCellBroadcastReceiverApp;
+    private static final String TAG = "CellBroadcastReceiverApp";
 
     @Override
     public void onCreate() {
         super.onCreate();
+        // TODO: fix strict mode violation from the following method call during app creation
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-        gCellBroadcastReceiverApp = this;
     }
 
-    public static CellBroadcastReceiverApp getCellBroadcastReceiverApp() {
-        return gCellBroadcastReceiverApp;
+    /** List of unread non-emergency alerts to show when user selects the notification. */
+    private static final ArrayList<CellBroadcastMessage> sNewMessageList =
+            new ArrayList<CellBroadcastMessage>(4);
+
+    /** Latest area info cell broadcast received. */
+    private static CellBroadcastMessage sLatestAreaInfo;
+
+    /** Adds a new unread non-emergency message and returns the current list. */
+    static ArrayList<CellBroadcastMessage> addNewMessageToList(CellBroadcastMessage message) {
+        sNewMessageList.add(message);
+        return sNewMessageList;
     }
 
-    // Each incoming CB gets its own notification. We have to use a new unique notification id
-    // for each one.
-    public int getNextNotificationId() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int notificationId = prefs.getInt(PREF_KEY_NOTIFICATION_ID, 0);
-        ++notificationId;
-        if (notificationId > 32765) {
-            notificationId = 1;     // wrap around before it gets dangerous
-        }
+    /** Clears the list of unread non-emergency messages. */
+    static void clearNewMessageList() {
+        sNewMessageList.clear();
+    }
 
-        // Save the updated notificationId in SharedPreferences
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt(PREF_KEY_NOTIFICATION_ID, notificationId);
-        editor.apply();
+    /** Saves the latest area info broadcast received. */
+    static void setLatestAreaInfo(CellBroadcastMessage areaInfo) {
+        sLatestAreaInfo = areaInfo;
+    }
 
-        if (DBG) Log.d(LOG_TAG, "getNextNotificationId: " + notificationId);
-
-        return notificationId;
+    /** Returns the latest area info broadcast received. */
+    static CellBroadcastMessage getLatestAreaInfo() {
+        return sLatestAreaInfo;
     }
 }
